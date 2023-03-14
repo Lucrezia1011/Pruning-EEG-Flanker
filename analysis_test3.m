@@ -17,7 +17,7 @@ subslist = cell(length(subsdir ) ,1);
 
 load('/data/liuzzil2/UMD_Flanker/results/correctCI_commission_allstims.mat')
 
-for stn = 1:2
+for stn = 2
     if stn == 1
         stimname =  'resp';
     elseif stn == 2
@@ -47,7 +47,7 @@ for stn = 1:2
      tbse = [tstart, tend]; % 0 mean in the same window of analysis
     % coeff = coeff(:,2);
     
-for downsampf = [40] % leave empty if no downsampling
+for downsampf = [30, 40] % leave empty if no downsampling
     
     twind = 0.1; % test different window lenghts? (Shorter or longer attractors?)
     % tstep = round( dowsampf * twind /2) ;
@@ -114,7 +114,7 @@ for downsampf = [40] % leave empty if no downsampling
 %             unix(sprintf('rm %sAtest3_*_f50Hz_norm1*',outputfolder));
 
             
-            if exist( [outputfolder,filename,'.set'],'file') && ~exist(fileout,'file')
+            if exist( [outputfolder,filename,'.set'],'file') %&& ~exist(fileout,'file')
                 
                 
                 EEG = [];
@@ -201,6 +201,11 @@ for downsampf = [40] % leave empty if no downsampling
                     Congr = ~strcmp(eventclean.RPTP , 'Omission') & strcmp(eventclean.CoNo , 'Congruent');
                     Incong = ~strcmp(eventclean.RPTP , 'Omission') & strcmp(eventclean.CoNo , 'Incongruent');
                     Respall = ~strcmp(eventclean.RPTP , 'Omission') ;
+                    
+                    Icorrect(strcmp(eventclean.RPTP , 'Omission')) = [];
+                    Ccorrect(strcmp(eventclean.RPTP , 'Omission')) = []; 
+                    Commission(strcmp(eventclean.RPTP , 'Omission')) = []; 
+                    
                     %                 % Topoplots
                     %                 cfg = [];
                     %                 cfg.trials = Icorrect;
@@ -222,30 +227,9 @@ for downsampf = [40] % leave empty if no downsampling
                     %%
                     
                     Aall = [];
-                    for cond = 1:7 %1:7
-                        if cond == 1
-                            condmat = Correct;
-                            condname = 'Correct';
-                        elseif cond == 2
-                            condmat = Commission;
-                            condname = 'Commission';
-                        elseif cond == 3
-                            condmat = Ccorrect;
-                            condname = 'CongCorr';
-                        elseif cond == 4
-                            condmat = Icorrect;
-                            condname = 'IncongCorr';
-                        elseif cond == 5
-                            condmat = Respall;
-                            condname = 'All';
-                        elseif cond == 6
-                            condmat = Congr;
-                            condname = 'Congruent';
-                        elseif cond == 7
-                            condmat = Incong;
-                            condname = 'Incongruent';
-                        end
-                        
+                   
+                       condmat = Respall;
+                       condname = 'All';
 
                         cfg = [];
                         cfg.trials = condmat;
@@ -289,7 +273,8 @@ for downsampf = [40] % leave empty if no downsampling
                         [N,edges] =histcounts(erptemp(:),'Normalization','pdf');
                         edges = (edges(1:end-1) + edges(2:end))/2;
                         
-                        erptemp = reshape(permute(erptemp,[1,3,2]), [ncomp,size(erptemp,2)*size(erptemp,3)]);  % norm2
+%                         erptemp = reshape(permute(erptemp,[1,3,2]), [ncomp,size(erptemp,2)*size(erptemp,3)]);  % norm2
+                        
 %                         figure; set(gcf,'color','w'); plot(erptemp'); 
 %                         xlabel('data point'); ylabel('z-score'); 
 %                         legend('PC 1','PC 2','location','best')
@@ -321,10 +306,42 @@ for downsampf = [40] % leave empty if no downsampling
                         
                         
                         %                 figure; set(gcf,'color','w','position',[  1129         325         360         888])
+                       
+                       datapc =  mean(erppca(:,Ccorrect,:),2); % congrunet correct
+                       xcc = erppca(:,Ccorrect,:) - datapc;
+                      
+                       datapc =  mean(erppca(:,Icorrect,:),2); % congrunet correct
+                       xic = erppca(:,Icorrect,:) - datapc;
+                       
+                       datapc =  mean(erppca(:,Commission,:),2); % congrunet correct
+                       xco = erppca(:,Commission,:) - datapc;
+                       
+                       for cond =1:4
                         
-                        
-                        datapc =  mean(erppca,2);
-                        x = erppca - datapc;
+                        if cond == 1
+                           
+                            condname = 'Commission';
+                            datapc =  mean(erppca(:,Commission,:),2);
+                            x = xco;
+                        elseif cond == 2
+                           
+                            condname = 'CongCorr';
+                            datapc =  mean(erppca(:,Ccorrect,:),2);
+                            x = xcc;
+                        elseif cond == 3
+                            
+                            condname = 'IncongCorr';
+                            datapc =  mean(erppca(:,Icorrect,:),2);
+                            x= xic;
+                        elseif cond == 4
+                          
+                            condname = 'All';
+                            datapc =  mean(erppca,2);
+                            x = cat(2, xcc, xic, xco);
+                        end
+
+                      
+                     
                         
 %                         figure; set(gcf,'color','w')
 %                         plot(erp.time, squeeze(mean(x,2)), 'linewidth',2)
@@ -362,6 +379,7 @@ for downsampf = [40] % leave empty if no downsampling
 %                     end
 %                     ylim([-3 80]); set(gca,'yTick',[])
 %                         xlabel('time (s)');
+        end
 
                         % Fourier spectrum of residuals
 %                         nffts = 2.^(7:11) ;

@@ -34,15 +34,16 @@ behaveTable = readtable('/data/liuzzil2/UMD_Flanker/results/behavioral_table_acc
 
 % sub = 6257, age 18, only 25 trials, jj = 98
 samplings = [30 40];
-% stimnames =  {'cue','flan','resp'};
-stimnames =  {'flan','resp'};
+stimnames =  {'cue','flan','resp'};
 
-nf = length(stimnames); %length(samplings);
+nf = length(stimnames);
+% nf =length(samplings);
 
 load('/data/liuzzil2/UMD_Flanker/results/correctCI_commission_allstims.mat')
 normalizeopt  = 2;
-conds = {'Correct'; 'Incongruent';'Congruent'; 'IncongCorr';'CongCorr'};
-
+% conds = {'Correct'; 'Incongruent';'Congruent'; 'IncongCorr';'CongCorr'};
+nbonf = 18;
+% conds = {'IncongCorr';'CongCorr';'Commission'};
 conds = {'All'};
 for iic = 1
 % Check for all conditions, also 40Hz
@@ -50,9 +51,10 @@ close all
 cond = conds{iic};
 
 ncomp = 2;
-cc = 2;
+cc = 1;
 
- for ff = 1%:2 
+ for ff = 1
+   
     downsampf = samplings(ff);
     twind = 0.1;
     % tstep = round( dowsampf * twind /2) ;
@@ -61,8 +63,14 @@ cc = 2;
   
     for ss  = 1:length(stimnames)
        
+       
         stimname =  stimnames{ss};
-
+        if strcmp(stimname, 'cue')
+            N = 10000;
+        else
+            N = 20000;
+        end
+        
         if strcmp(stimname,'flan')
             xl = [-0.4 0.6];
             load('/data/liuzzil2/UMD_Flanker/results/flan_grandavg_erp.mat')
@@ -307,24 +315,91 @@ cc = 2;
             lme_agelong = fitlme(A, 'eig ~ age + (1|sub)' );
             teig_long(t) = lme_agelong.Coefficients.tStat(strcmp(lme_agelong.CoefficientNames,'age'));
             eigeff_long(:,t) = lme_agelong.Coefficients.Estimate;
-            lme_acclong = fitlme(A, 'accuracy ~ eig + (1|sub)' );
+            lme_acclong = fitlme(A, 'accuracy ~ eig  + (1|sub)' );
+            
             accorr_long(t) = lme_acclong.Coefficients.tStat(strcmp(lme_acclong.CoefficientNames,'eig'));
             accseff_long(:,t) = lme_acclong.Coefficients.Estimate(...
                 strcmp(lme_acclong.CoefficientNames,'(Intercept)')  | strcmp(lme_acclong.CoefficientNames,'eig'));
-            lme_rtslong = fitlme(A, 'RTs ~ eig + (1|sub)' );
+            lme_rtslong = fitlme(A, 'RTs ~ eig  + (1|sub)' );
+            
             rtscorr_long(t) = lme_rtslong.Coefficients.tStat(strcmp(lme_rtslong.CoefficientNames,'eig'));
             rtseff_long(:,t) = lme_rtslong.Coefficients.Estimate(...
                 strcmp(lme_rtslong.CoefficientNames,'(Intercept)') | strcmp(lme_rtslong.CoefficientNames,'eig'));
             
-            lme_rtlong = fitlme(A, 'RT ~ eig + (1|sub)' );
+            lme_rtlong = fitlme(A, 'RT ~ eig  + (1|sub)' );
             rtcorr_long(t) = lme_rtlong.Coefficients.tStat(strcmp(lme_rtlong.CoefficientNames,'eig'));
             rteff_long(:,t) = lme_rtlong.Coefficients.Estimate(...
                 strcmp(lme_rtlong.CoefficientNames,'(Intercept)') | strcmp(lme_rtlong.CoefficientNames,'eig'));
         end
         
-        t0 = 0.4147;
+%         t0 = 0.0147;
+%         [~,t]= min(abs(time - t0));
+%         A.eig = eig(:,t);
+%         A.eig = zscore(A.eig);
+%         lme = fitlme(A, 'RTs ~ eig  + (1|sub)' );    
+        %% Bar plots
+        figure(1); set(gcf,'color','w')
+        subplot(1,nf,ss)
+        cla; hold all
+        co = get(gca,'colororder');
+        co(3,:) = co(5,:); co(5,:) = co(2,:);
+        set(gca,'colororder',co)
+        t0 = 0.0147;
         [~,t]= min(abs(time - t0));
+        ages = [12, 15, 18];
+        for a = 1:3
+            bar(a, mean(eig(Atb.age == ages(a)  ,t) ))
+            errorbar(a, mean(eig(Atb.age == ages(a)  ,t) ), ...
+                std(eig(Atb.age == ages(a)  ,t) )/sqrt(nnz(Atb.age == ages(a))),'k.')
+            
+        end 
+        set(gca,'Xtick',1:3,'Xticklabels',ages); 
+        xlabel('age group'); ylabel('eigenvalue'); 
+        title(sprintf('Eigenvalue at %d ms',round(time(t)*1e3)))
+        ylim([0.3 0.6])
         
+%         subplot(2,nf,ss+nf)
+%         cla; hold all
+%         set(gca,'colororder',co)
+%         if ss == 2
+%             t0 = 0.4147;
+%         else
+%             t0 = 0.01;
+%         end
+%         [~,t]= min(abs(time - t0));
+%         ages = [12, 15, 18];
+%         for a = 1:3
+%             bar(a, mean(eig(Atb.age == ages(a)  ,t) ))
+%             errorbar(a, mean(eig(Atb.age == ages(a)  ,t) ), ...
+%                 std(eig(Atb.age == ages(a)  ,t) )/sqrt(nnz(Atb.age == ages(a))),'k.')
+%         end 
+%         set(gca,'Xtick',1:3,'Xticklabels',ages); 
+%         xlabel('age group'); ylabel('eigenvalue'); 
+%         title(sprintf('Eigenvalue at %d ms',round(time(t)*1e3)))
+      
+%% Scatter plot of RT vs age
+%     figure(2); clf; set(gcf,'color', 'w')
+%     subplot(121)
+%     scatter(Atb.aged, Atb.RT)
+%     lme = fitlme(Atb, 'RT ~ aged' );
+% %     [r,p] = corr(Atb.aged, Atb.RT);
+%     r = sign(lme.Coefficients.tStat(2))*sqrt(lme.Coefficients.tStat(2)^2 / (lme.Coefficients.tStat(2)^2 + lme.Coefficients.DF(2)));
+%     hold on
+%     plot([12,20],lme.Coefficients.Estimate(1) + lme.Coefficients.Estimate(2)*[12,20],'k')
+%     xlabel('age (years)'); ylabel('mean(RT) (ms)')
+%     title(sprintf('mean(RT) ~ age, R = %.2f, p = %.1s',r,lme.Coefficients.pValue(2) ))
+%     subplot(122)
+%     scatter(Atb.aged, Atb.RTs)
+%     lmes = fitlme(Atb, 'RTs ~ aged' );
+% %     [r,p] = corr(Atb.aged, Atb.RTs);
+%     r = sign(lmes.Coefficients.tStat(2))*sqrt(lmes.Coefficients.tStat(2)^2 / (lmes.Coefficients.tStat(2)^2 + lmes.Coefficients.DF(2)));
+%     hold on
+%     plot([12,20],lmes.Coefficients.Estimate(1) + lmes.Coefficients.Estimate(2)*[12,20],'k')
+%     xlabel('age (years)'); ylabel('stdev(RT) (ms)')
+%     title(sprintf('stdev(RT) ~ age, R = %.2f, p = %.1s',r,lmes.Coefficients.pValue(2) ))
+    
+%      saveas(gcf,'/data/liuzzil2/UMD_Flanker/results/scatter_RT_age.jpg');
+%      saveas(gcf,'/data/liuzzil2/UMD_Flanker/results/scatter_RT_age.fig');
         %%
         addpath /data/liuzzil2/UMD_Flanker/matlab
         H =2; E =0.5; dh =0.1; C = 4;
@@ -332,9 +407,10 @@ cc = 2;
         [tfce_acc] = matlab_tfce_transform(accorr_long,H,E,C,dh);
         [tfce_rts] = matlab_tfce_transform(rtscorr_long,H,E,C,dh);
         [tfce_rt] = matlab_tfce_transform(rtcorr_long,H,E,C,dh);
-        N = 10000;
+       
         
         agenull_file = sprintf('/data/liuzzil2/UMD_Flanker/results/eig_fix-age_rand-sub_f%dHz_cond-%s_N%d_%s.mat',downsampf,cond,N,stimname);
+%         agenull_file2 = sprintf('/data/liuzzil2/UMD_Flanker/results/eig_fix-age_rand-sub_f%dHz_cond-%s_N%d_%s2.mat',downsampf,cond,N,stimname);
         if ~exist(agenull_file,'file')
             A = table;
             A.sub = Atb.sub;
@@ -347,8 +423,8 @@ cc = 2;
             save(agenull_file,'npeaks')
         end
         
-        
         rtsnull_file = sprintf('/data/liuzzil2/UMD_Flanker/results/RTs_fix-eig_rand-sub_f%dHz_cond-%s_N%d_%s.mat',downsampf,cond,N,stimname);
+%         rtsnull_file2 = sprintf('/data/liuzzil2/UMD_Flanker/results/RTs_fix-eig_rand-sub_f%dHz_cond-%s_N%d_%s2.mat',downsampf,cond,N,stimname);
         if ~exist(rtsnull_file,'file')
             A = table;
             A.sub = Atb.sub;
@@ -361,6 +437,7 @@ cc = 2;
         end
         
         rtnull_file = sprintf('/data/liuzzil2/UMD_Flanker/results/RT_fix-eig_rand-sub_f%dHz_cond-%s_N%d_%s.mat',downsampf,cond,N,stimname);
+%         rtnull_file2 = sprintf('/data/liuzzil2/UMD_Flanker/results/RT_fix-eig_rand-sub_f%dHz_cond-%s_N%d_%s2.mat',downsampf,cond,N,stimname);
         if ~exist(rtnull_file,'file')
             A = table;
             A.sub = Atb.sub;
@@ -372,8 +449,8 @@ cc = 2;
             save(rtnull_file,'npeaks')
         end
         
-      
         accnull_file = sprintf('/data/liuzzil2/UMD_Flanker/results/Accuracy_fix-eig_rand-sub_f%dHz_cond-%s_N%d_%s.mat',downsampf,cond,N,stimname);
+%         accnull_file2 = sprintf('/data/liuzzil2/UMD_Flanker/results/Accuracy_fix-eig_rand-sub_f%dHz_cond-%s_N%d_%s2.mat',downsampf,cond,N,stimname);
         if ~exist(accnull_file,'file')
             A = table;
             A.sub = Atb.sub;
@@ -389,32 +466,43 @@ cc = 2;
       
         
         %%
-        a = 0.05/12;
-        figure; set(gcf,'color','w','name',sprintf('Distributions %s f%dHz',stimname,downsampf))
+       
+        a = 0.05/nbonf;
+        
         
         load(rtnull_file)
         npeaksrt = npeaks;
         if size(npeaksrt,1) == 1
             npeaksrt = [npeaksrt(1:2:end)',npeaksrt(2:2:end)'];
         end
+%         load(rtnull_file2)
+%         npeaksrt = [npeaksrt; npeaks];
         
         load(rtsnull_file)
         npeaksrts = npeaks;
         if size(npeaksrts,1) == 1
             npeaksrts = [npeaksrts(1:2:end)',npeaksrts(2:2:end)'];
         end
+%         load(rtsnull_file2)
+%         npeaksrts = [npeaksrts; npeaks];
         
         load(accnull_file)
         npeaksacc = npeaks;
         if size(npeaksacc,1) == 1
             npeaksacc = [npeaksacc(1:2:end)',npeaksacc(2:2:end)'];
         end
+%         load(accnull_file2)
+%         npeaksacc = [npeaksacc; npeaks];
+%         
         
         load(agenull_file)
         npeaksage = npeaks;
         if size(npeaksage,1) == 1
             npeaksage = [npeaksage(1:2:end)',npeaksage(2:2:end)'];
         end
+%         load(agenull_file2)
+%         npeaksage = [npeaksage; npeaks];
+        
 %         npeaks = [npeaksrt;npeaksrts;npeaksacc;npeaksage];
 %         
 %         npeaksrt = npeaks;
@@ -422,45 +510,46 @@ cc = 2;
 %         npeaksacc = npeaks;
 %         npeaksage = npeaks;
         
-        subplot(414)
-        histogram(npeaksrts(:,2),'Normalization','pdf','DisplayStyle','stairs')
-        hold on
-        histogram(tfce_rts,'Normalization','probability','DisplayStyle','stairs')
+%     figure; set(gcf,'color','w','name',sprintf('Distributions %s f%dHz',stimname,downsampf))
+%         subplot(414)
+%         histogram(npeaksrts(:,2),'Normalization','pdf','DisplayStyle','stairs')
+%         hold on
+%         histogram(tfce_rts,'Normalization','probability','DisplayStyle','stairs')
         rtsnull = sort(npeaksrts(:,2),'descend');
-        plot([1,1]*rtsnull(ceil(a*N)) , [0,1],'k--')
-        title('RTs ~ eig + (1|sub)')
-        
-        
-        
-        subplot(413)
-        histogram(npeaksrt(:,2),'Normalization','pdf','DisplayStyle','stairs')
-        hold on
-        histogram(tfce_rt,'Normalization','probability','DisplayStyle','stairs')
+%         plot([1,1]*rtsnull(ceil(a*N)) , [0,1],'k--')
+%         title('RTs ~ eig + (1|sub)')
+%         
+%         
+%         
+%         subplot(413)
+%         histogram(npeaksrt(:,2),'Normalization','pdf','DisplayStyle','stairs')
+%         hold on
+%         histogram(tfce_rt,'Normalization','probability','DisplayStyle','stairs')
         rtnull = sort(npeaksrt(:,2),'descend');
-        plot([1,1]*rtnull(ceil(a*N)) , [0,1],'k--')
-        title('RT ~ eig + (1|sub)')
-        
-        
-        
-        
-        subplot(412)
-        histogram(npeaksacc(:,1),'Normalization','pdf','DisplayStyle','stairs')
-        hold on
-        histogram(tfce_acc,'Normalization','probability','DisplayStyle','stairs')
+%         plot([1,1]*rtnull(ceil(a*N)) , [0,1],'k--')
+%         title('RT ~ eig + (1|sub)')
+%         
+%         
+%         
+%         
+%         subplot(412)
+%         histogram(npeaksacc(:,1),'Normalization','pdf','DisplayStyle','stairs')
+%         hold on
+%         histogram(tfce_acc,'Normalization','probability','DisplayStyle','stairs')
         accnull = sort(npeaksacc(:,1),'ascend');
-        plot([1,1]*accnull(ceil(a*N)) , [0,1],'k--')
-        title('accuracy ~ eig + (1|sub)')
-        legend('null','data',sprintf('a=%.4f',a))
-        
-        
-        
-        subplot(411)
-        histogram(npeaksage(:,1),'Normalization','pdf','DisplayStyle','stairs')
-        hold on
-        histogram(tfce_age,'Normalization','probability','DisplayStyle','stairs')
+%         plot([1,1]*accnull(ceil(a*N)) , [0,1],'k--')
+%         title('accuracy ~ eig + (1|sub)')
+%         legend('null','data',sprintf('a=%.4f',a))
+%         
+%         
+%         
+%         subplot(411)
+%         histogram(npeaksage(:,1),'Normalization','pdf','DisplayStyle','stairs')
+%         hold on
+%         histogram(tfce_age,'Normalization','probability','DisplayStyle','stairs')
         agenull = sort(npeaksage(:,1),'ascend');
-        plot([1,1]*agenull(ceil(a*N)) , [0,1],'k--')
-        title('eig ~ age + (1|sub)')
+%         plot([1,1]*agenull(ceil(a*N)) , [0,1],'k--')
+%         title('eig ~ age + (1|sub)')
         
 %         
 %         saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/NullDistributions_%s_%s_f%dHz_%dcomps_downsamp_norm_w%dms_PC%d.jpg',...
@@ -471,13 +560,16 @@ cc = 2;
         %%
 %         ss = ff;
         
-        figure(5);set(gcf, 'color' , 'w','position', [205   64  1003   855]) %[10    30   834   1134]
+        figure(5);set(gcf, 'color' , 'w','position',[205          64        1420         855]) %[10    30   834   1134]
         subplot(4,nf,ss)
-        
-        co  = get(gca,'colororder');
-        
+        ax = gca;
+        co  = get(ax,'colororder');
+        co(3,:) = co(2,:); co(2,:) = co(5,:);
+        colororder(co);
+      
         plot(time, cat(1,mean(eig(Atb.age==12,:),1),...
             mean(eig(Atb.age==15,:),1),mean(eig(Atb.age==18,:),1 )),'linewidth',2)
+%         colororder({'k','k'})
         hold on;
         fill([time fliplr(time)],...
             [mean(eig(Atb.age==12,:),1)+std(eig(Atb.age==12,:))/sqrt(size(eig(Atb.age==12,:),1)),...
@@ -493,33 +585,36 @@ cc = 2;
             co(3,:),'edgecolor','none','facealpha',0.3)
         ylabel('eigenvalue');
         
-        yyaxis right; hold all
+        yyaxis right; ax.YAxis(2).Color = 'k'; hold all; 
         plot(time,teig_long,'k--','linewidth',1)
         indsig = tfce_age < agenull(ceil(a*N));
         plot(time(indsig),teig_long(indsig),'k*','linewidth',2)
         
         xlabel('time (s)'); ylabel('tstat'); grid on
         title('eig ~ age + (1|sub)')
+        if ss == 1
         legend('12yo','15yo','18yo','location','northwest')
+        end
         xlim(xl);
         
         subplot(4,nf,ss + nf)
-        
-        co  = get(gca,'colororder');
+        ax = gca;
+        co(2,:) = co(3,:); colororder(co);
 %         erp1 = sum(grandavg.age12.all.avg .* coeff(:,2),1) ;
 %         erp2 = sum(grandavg.age15.all.avg .* coeff(:,2),1) ;
 %         erp3 = sum(grandavg.age18.all.avg .* coeff(:,2),1) ;
-        timerp = grandavg.age12.all.time;
+%         timerp = grandavg.age12.all.time;
 %         plot(timerp, [erp1; erp2;erp3],'linewidth',2)
         erp1 = sum(grandavg.all.all.avg .* coeff(:,1),1) ;
         erp2 = sum(grandavg.all.all.avg .* coeff(:,2),1) ;
 %         erp1 = (erp1 - mean(erp1(timerp>xl(1) & timerp<xl(2)))) / std(erp1(timerp>xl(1) & timerp<xl(2)));
 %         erp2 = (erp2 - mean(erp2(timerp>xl(1) & timerp<xl(2)))) / std(erp2(timerp>xl(1) & timerp<xl(2)));
         timerp = grandavg.age12.all.time;
+      
         plot(timerp, [erp1; erp2],'linewidth',2)
-
-
-        yyaxis right; hold all
+        ylabel('sum of potentials (\muV)')
+       
+        yyaxis right; hold all;ax.YAxis(2).Color = 'k';
         plot(time, accorr_long,'k--','linewidth',1)
         indsig = tfce_acc < accnull(ceil(a*N));
         plot(time(indsig),accorr_long(indsig),'k*','linewidth',2)
@@ -530,93 +625,176 @@ cc = 2;
         
         
         subplot(4,nf,ss + (nf)*3)
-        
+        ax = gca;
        
 %         plot(timerp, [erp1; erp2;erp3],'linewidth',2)
         plot(timerp, [erp1; erp2],'linewidth',2)
-        yyaxis right; hold all
+        ylabel('sum of potentials (\muV)')
+        yyaxis right; hold all; ax.YAxis(2).Color = 'k';
         plot(time, rtscorr_long,'k--','linewidth',1)
         indsig = tfce_rts > rtsnull(ceil(a*N));
         plot(time(indsig),rtscorr_long(indsig),'k*','linewidth',2)
         xlim(xl);
         xlabel('time (s)'); ylabel('tstat'); grid on
-        title('RTs ~ eig + (1|sub)')
+        title('stdev(RT) ~ eig + (1|sub)')
         
         subplot(4,nf,ss + (nf)*2)
-
+        ax = gca;
         
 %         plot(timerp, [erp1; erp2;erp3],'linewidth',2)
-        plot(timerp, [erp1; erp2],'linewidth',2)
-        yyaxis right; hold all
+        plot(timerp, [erp1; erp2],'linewidth',2); 
+        ylabel('sum of potentials (\muV)')
+        yyaxis right; hold all; ax.YAxis(2).Color = 'k';
         plot(time, rtcorr_long,'k--','linewidth',1)
         indsig = tfce_rt > rtnull(ceil(a*N));
         plot(time(indsig),rtcorr_long(indsig),'k*','linewidth',2)
         xlim(xl);
         xlabel('time (s)'); ylabel('tstat'); grid on
-        title('RT ~ eig + (1|sub)')
+        title('mean(RT) ~ eig + (1|sub)')
         
         %%
-%         
-%         figure;  set(gcf, 'color' , 'w','name',...
-%             sprintf('Longitudinal effects %s f%dHz',stimname,downsampf))
-%         % subplot(3,1,1)
+        
+        figure(3);  
+        set(gcf, 'color' , 'w','position',[104    64   1668    355])
+        subplot(1,nf,ss )
 %         [~,t] = min(teig_long);
-%         A = table;
-%         A.age = Atb.aged;
-%         A.sub = Atb.sub;
-%         A.eig = eig(:,t);
-%         scatter(A.age, A.eig); hold all; x = xlim;
-%         plot(x,eigeff_long(1,t) + eigeff_long(2,t)*x,'linewidth',2)
-%         for jj = 1:length(subsdir)
-%             sub = subsdir(jj).name(5:end);
-%             inds = A.sub == str2double(sub);
-%             plot(A.age(inds), A.eig(inds),'k')
-%         end
-%         xlabel('age (years)'); ylabel('eigenvalue')
-%         title(sprintf('Eigenvalues vs age at time %dms',round(time(t)*1000)))
-%         saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/LongitudinalAgeEffct_%s_%s_f%dHz_%dcomps_downsamp_norm_w%dms_PC%d.jpg',...
+        [~,t]= min(abs(time - 0));
+        A = table;
+        A.age = Atb.aged;
+        A.sub = Atb.sub;
+        A.eig = eig(:,t);
+        scatter(A.age, A.eig); hold all; x = xlim;
+        
+        lme_agelong = fitlme(A, 'eig ~ age + (1|sub)' );
+        eigeff_long_t = lme_agelong.Coefficients.Estimate;
+        
+        plot(x,eigeff_long_t(1) + eigeff_long_t(2)*x,'linewidth',2)
+        for jj = 1:length(subsdir)
+            sub = subsdir(jj).name(5:end);
+            inds = A.sub == str2double(sub);
+            plot(A.age(inds), A.eig(inds),'k')
+        end
+        xlabel('age (years)'); ylabel('eigenvalue')
+        title(sprintf('%s at time %dms',stimname,  round(time(t)*1000)))
+      
+               
+        if ss > 1
+        figure(4)  
+        set(gcf, 'color' , 'w','position',[203    60   908   855]) 
+        subplot(3,nf-1,ss-1 )
+        [~,t] = min(accorr_long);
+        A.eig = eig(:,t);
+        A.accuracy = Atb.accuracy;
+        scatter(A.eig, A.accuracy); hold all; x = xlim;
+        lme_acclong = fitlme(A, 'accuracy ~ eig  + (1|sub)' );
+            
+            accseff_long_t = lme_acclong.Coefficients.Estimate(...
+                strcmp(lme_acclong.CoefficientNames,'(Intercept)')  | strcmp(lme_acclong.CoefficientNames,'eig'));
+            
+        plot(x,accseff_long_t(1) + accseff_long_t(2)*x,'linewidth',2)
+        for jj = 1:length(subsdir)
+            sub = subsdir(jj).name(5:end);
+            inds = A.sub == str2double(sub);
+            [eigst,sind] = sort(A.eig(inds),'ascend');
+            a = A.accuracy(inds);
+            plot(eigst, a(sind),'k')
+        end
+        xlabel('eigenvalue'); ylabel('accuracy');
+        title(sprintf('Accuracy %s at time %dms',stimname,round(time(t)*1000)))
+        
+        
+        
+        
+        subplot(3,nf-1,ss-1 + (nf-1))
+        
+        [~,t] = max(rtcorr_long);
+        
+        A.eig = eig(:,t);
+        A.RT = Atb.RT;
+        scatter(A.eig, A.RT); hold all; x = xlim;
+        
+        lme_rtlong = fitlme(A, 'RT ~ eig  + (1|sub)' );
+            
+            rteff_long_t = lme_rtlong.Coefficients.Estimate(...
+                strcmp(lme_rtlong.CoefficientNames,'(Intercept)') | strcmp(lme_rtlong.CoefficientNames,'eig'));
+           
+        
+        
+        plot(x,rteff_long_t(1) + rteff_long_t(2)*x,'linewidth',2)
+        for jj = 1:length(subsdir)
+            sub = subsdir(jj).name(5:end);
+            inds = A.sub == str2double(sub);
+            [eigst,sind] = sort(A.eig(inds),'ascend');
+            a = A.RT(inds);
+            plot(eigst, a(sind),'k')
+        end
+        xlabel('eigenvalue'); ylabel('mean(RT)')
+        title(sprintf('mean(RT) %s at time %dms',stimname,round(time(t)*1000)))
+        
+        
+        
+        
+        
+        subplot(3,nf-1,ss-1 + 2*(nf-1))
+        
+        [~,t] = max(rtscorr_long);
+        
+        A.eig = eig(:,t);
+        A.RTs = Atb.RTs;
+        scatter(A.eig, A.RTs); hold all; x = xlim;
+        
+        lme_rtslong = fitlme(A, 'RTs ~ eig  + (1|sub)' );
+            
+            rtseff_long_t = lme_rtslong.Coefficients.Estimate(...
+                strcmp(lme_rtslong.CoefficientNames,'(Intercept)') | strcmp(lme_rtslong.CoefficientNames,'eig'));
+           
+        
+        
+        plot(x,rtseff_long_t(1) + rtseff_long_t(2)*x,'linewidth',2)
+        for jj = 1:length(subsdir)
+            sub = subsdir(jj).name(5:end);
+            inds = A.sub == str2double(sub);
+            [eigst,sind] = sort(A.eig(inds),'ascend');
+            a = A.RTs(inds);
+            plot(eigst, a(sind),'k')
+        end
+        xlabel('eigenvalue'); ylabel('stdev(RT)')
+        title(sprintf('stdev(RT) %s at time %dms',stimname,round(time(t)*1000)))
+        end
+%           saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/LongitudinalAgeEffct_%s_%s_f%dHz_%dcomps_downsamp_norm_w%dms_PC%d.jpg',...
 %             stimname,cond,downsampf,ncomp,twind*1000,cc));
-        
-        %
-        % subplot(3,1,2)
-        %
-        % [~,t] = min(accorr_long);
-        % A.eig = eig(:,t);
-        % scatter(A.eig, A.accuracy); hold all; x = xlim;
-        % plot(x,accseff_long(1,t) + accseff_long(2,t)*x,'linewidth',2)
-        % for jj = 1:length(subsdir)
-        %     sub = subsdir(jj).name(5:end);
-        %     inds = A.sub == str2double(sub);
-        %     [eigst,sind] = sort(A.eig(inds),'ascend');
-        %     a = A.accuracy(inds);
-        %     plot(eigst, a(sind),'k')
-        % end
-        % xlabel('eigenvalue'); ylabel('accuracy');
-        % title(sprintf('Accuracy vs Eigenvalues at time %dms',round(time(t)*1000)))
-        %
-        % subplot(3,1,3)
-        %
-        % [~,t] = max(rtscorr_long);
-        %
-        % A.eig = eig(:,t);
-        % scatter(A.eig, A.RTs); hold all; x = xlim;
-        % plot(x,rtseff_long(1,t) + rtseff_long(2,t)*x,'linewidth',2)
-        % for jj = 1:length(subsdir)
-        %     sub = subsdir(jj).name(5:end);
-        %     inds = A.sub == str2double(sub);
-        %     [eigst,sind] = sort(Atb.eig(inds),'ascend');
-        %     a = A.RTs(inds);
-        %     plot(eigst, a(sind),'k')
-        % end
-        % xlabel('eigenvalue'); ylabel('stdve(RT)')
-        % title(sprintf('stdev(RT) vs Eigenvalues at time %dms',round(time(t)*1000)))
-        
+%         
         
     end
     figure(5)
-    saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/ClusterCorr_%dHz_%s_%dcomps_downsamp_norm%d_w%dms_PC%d.jpg',...
-        downsampf,cond,ncomp,normalizeopt,twind*1000,cc));
+    saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/ClusterCorr_nbonf%d_%dHz_%s_%dcomps_downsamp_norm%d_w%dms_PC%d.jpg',...
+        nbonf,downsampf,cond,ncomp,normalizeopt,twind*1000,cc));
     
+    saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/ClusterCorr_nbonf%d_%dHz_%s_%dcomps_downsamp_norm%d_w%dms_PC%d.fig',...
+        nbonf,downsampf,cond,ncomp,normalizeopt,twind*1000,cc));
+
+    saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/ClusterCorr_%dHz_%s_%dcomps_downsamp_norm%d_w%dms_PC%d.jpg',...
+        downsampf,'cue',ncomp,normalizeopt,twind*1000,cc));
+    figure(3)
+    saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/AgeLongitudinalEffects_%s_f%dHz_%dcomps_downsamp_norm_w%dms_PC%d.jpg',...
+        cond,downsampf,ncomp,twind*1000,cc));
+    
+    saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/AgeLongitudinalEffects_%s_f%dHz_%dcomps_downsamp_norm_w%dms_PC%d.fig',...
+        cond,downsampf,ncomp,twind*1000,cc));
+    
+    figure(4)
+    saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/LongitudinalEffects_%s_f%dHz_%dcomps_downsamp_norm_w%dms_PC%d.jpg',...
+        cond,downsampf,ncomp,twind*1000,cc));
+    
+    saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/LongitudinalEffects_%s_f%dHz_%dcomps_downsamp_norm_w%dms_PC%d.fig',...
+        cond,downsampf,ncomp,twind*1000,cc));
+
+
+    figure(1)
+    saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/Eigbar_%s_f%dHz_%dcomps_downsamp_norm_w%dms_PC%d.fig',...
+        cond,downsampf,ncomp,twind*1000,cc));
+    saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/Eigbar_%s_f%dHz_%dcomps_downsamp_norm_w%dms_PC%d.jpg',...
+        cond,downsampf,ncomp,twind*1000,cc));
  end
 end
 

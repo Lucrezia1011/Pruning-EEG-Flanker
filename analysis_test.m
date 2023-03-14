@@ -91,6 +91,8 @@ for jj = 1:length(subsdir)
             cfg.baselinewindow = tbasel ;
             data = ft_preprocessing(cfg,data);
             
+   
+            
             if length(data.trial) > 50 % only use datasets with at least 50 trials
                 
                 tempTable = array2table({sub,age,length(data.trial)}, 'VariableNames',["sub","age","ntrials"]);
@@ -301,66 +303,32 @@ set(gcf,'color','w','position',[ 2666   423  1055   849])
 saveas(gcf,['/data/liuzzil2/UMD_Flanker/results/topoplot_CRL_n' num2str(k) '_' stimname '.jpg'])
 
 
-%%
-s = 'commission';
-cfg = [];
-cfg.parameter = 'avg';
-cfg.keepindividual = 'yes' ;
-grandavg_correct = ft_timelockgrandaverage(cfg, erpcorrect{:} );
-grandavg_commission = ft_timelockgrandaverage(cfg, erpcommission{:} );
-grandavg_alltrials = ft_timelockgrandaverage(cfg, erpall{:} );
-grandav = cat(1, grandavg_correct.individual, grandavg_commission.individual );
-grandav = reshape(permute(grandav,[2,3,1]),[104,length(grandavg_alltrials.time)*k*2])';
-
-
-% grandav = grandavg_alltrials.individual ;
-% grandav = reshape(permute(grandav,[2,3,1]),[104,length(grandavg_alltrials.time)*k])';
-% 
-% grandav = cat(2,grandavg.age12.all.avg,grandavg.age15.all.avg,grandavg.age18.all.avg)';
-
-
-% if strcmp(s,'commission')
-%     grandav = (grandavg_correct.avg + grandavg_commission.avg)'/2;
-% else
-%     grandav = (grandavg_erpL.avg + grandavg_erpR.avg)'/2;   
-% end
-
-% grandav = reshape(permute(grandavg_correct.individual,[2,3,1]),[104,375*335])';
-% grandav = reshape(permute(grandavg_correct.individual,[2,3,1]),[104,375*335*2])';
-
-% grandav = cat(2, grandavg.all.congruent.avg, grandavg.all.incongruent.avg,...
-%     grandavg.age12.congruent.avg, grandavg.age12.incongruent.avg, ...
-%     grandavg.age15.congruent.avg, grandavg.age15.incongruent.avg, ...
-%     grandavg.age18.congruent.avg, grandavg.age18.incongruent.avg)';
-
-gradav = cat(2, grandavg.age12.congruentC.avg, grandavg.age12.incongruentC.avg, grandavg.age12.commission.avg,...
-    grandavg.age15.congruentC.avg, grandavg.age15.incongruentC.avg, grandavg.age15.commission.avg,...
-    grandavg.age18.congruentC.avg, grandavg.age18.incongruentC.avg, grandavg.age18.commission.avg)';
-
-
-[coeff, score] = pca(grandav);
-figure
-plot(cumsum(var(score))/ sum(var(score)))
-xlabel('principal components'); ylabel('explained variance')
-xlim([0 20])
-
-saveas(gcf,'/data/liuzzil2/UMD_Flanker/results/PCA_variance.jpg')
 
 
 %%
+
 load('/data/liuzzil2/UMD_Flanker/results/cue_grandavg_erp.mat')
-grandav = cat(2,grandavg.age12.all.avg,grandavg.age15.all.avg,grandavg.age18.all.avg);
-
+grandavgcue = grandavg;
 load('/data/liuzzil2/UMD_Flanker/results/flan_grandavg_erp.mat')
-grandav = cat(2,grandav, grandavg.age12.congruentC.avg, grandavg.age12.incongruentC.avg, grandavg.age12.commission.avg,...
-    grandavg.age15.congruentC.avg, grandavg.age15.incongruentC.avg, grandavg.age15.commission.avg,...
-    grandavg.age18.congruentC.avg, grandavg.age18.incongruentC.avg, grandavg.age18.commission.avg);
-
+grandavgflan = grandavg;
 load('/data/liuzzil2/UMD_Flanker/results/resp_grandavg_erp.mat')
-grandav = cat(2,grandav, grandavg.age12.congruentC.avg, grandavg.age12.incongruentC.avg, grandavg.age12.commission.avg,...
-    grandavg.age15.congruentC.avg, grandavg.age15.incongruentC.avg, grandavg.age15.commission.avg,...
-    grandavg.age18.congruentC.avg, grandavg.age18.incongruentC.avg, grandavg.age18.commission.avg);
+grandavgresp = grandavg;
 
+grandavg = [];
+for age = [12,15,18]
+grandavg.(['age',num2str(age)]) = cat(2,  grandavgcue.age12.all.avg, ...
+    grandavgflan.(['age',num2str(age)]).congruentC.avg, ...
+    grandavgflan.(['age',num2str(age)]).incongruentC.avg, ...
+    grandavgflan.(['age',num2str(age)]).commission.avg,...
+    grandavgresp.(['age',num2str(age)]).congruentC.avg, ...
+    grandavgresp.(['age',num2str(age)]).incongruentC.avg, ...
+    grandavgresp.(['age',num2str(age)]).commission.avg) ;
+
+grandavg.(['age',num2str(age)])  = grandavg.(['age',num2str(age)]) / std(grandavg.(['age',num2str(age)])(:));
+end
+
+
+grandav = cat(2,grandavg.age12, grandavg.age15, grandavg.age18);
 
 [coeff, score] = pca(grandav');
 figure; set(gcf,'color','w'); cla
@@ -370,7 +338,7 @@ plot(cumsum(var(score))/ sum(var(score)),'k.','MarkerSize',25)
 xlabel('principal components'); ylabel('explained variance')
 xlim([0 10]); grid on; title('Cumulative variance explained')
 
-save('/data/liuzzil2/UMD_Flanker/results/correctCI_commission_allstims','coeff')
+save('/data/liuzzil2/UMD_Flanker/results/correctCI_commission_allstims_z','coeff')
 
 %% Can we see difference in correct-commision in PCA?
 

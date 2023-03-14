@@ -14,7 +14,7 @@ ft_defaults
 
 cd /data/liuzzil2/UMD_Flanker/results
 
-n = 3;
+n = 2;
 % coeff(:,n) = zeros(size(coeff,1),1);
 % coeff(68,n) = 1;
 close all
@@ -23,6 +23,7 @@ figure(2); set(gcf,'color','w','position',[239 42 1313 762])
 co  = get(gca,'colororder');
 
 load('correctCI_commission_allstims.mat')
+for n = 1:2
 for ii = 1:2
     if ii ==1
         stimname =  'flan';
@@ -56,7 +57,7 @@ for ii = 1:2
     time = grandavg.all.correct.time;
     
     fieldnames = {'all','age12','age15','age18'};
-    figure(1); set(gcf,'name','Incong.Corr. - Congruent.Corr.')
+    figure(n); set(gcf,'name',['PC ',num2str(n)])
     for jj = 1:length(fieldnames)
         subplot(2,4,(ii-1)*4 + jj)
         hold all
@@ -72,62 +73,75 @@ for ii = 1:2
             ./ sqrt(grandavg.(fieldnames{jj}).incongruentC.dof(1,:));
         plot(time, erp2, 'color',co(2,:),'linewidth',2)
         
+       
+        erp3 = sum(grandavg.(fieldnames{jj}).commissionI.avg .* coeff(:,n),1) ;
+        %     erp2 = erp2 - mean(erp2(timebl));
+        erp3v = sqrt(sum(((grandavg.(fieldnames{jj}).commissionI.var ) .* abs(coeff(:,n))).^2,1)) ...
+            ./ sqrt(grandavg.(fieldnames{jj}).commissionI.dof(1,:));
+        plot(time, erp3, 'color',co(4,:),'linewidth',2)
+        
+        
         plot(time, erp2 - erp1, '--k')
         
+
         fill([time, fliplr(time)],[erp1 + erp1v, fliplr(erp1 - erp1v)], co(1,:),...
             'edgecolor','none','facealpha',0.2  )
         
         fill([time, fliplr(time)],[erp2 + erp2v, fliplr(erp2 - erp2v)], co(2,:),...
+            'edgecolor','none','facealpha',0.2  )
+        
+        fill([time, fliplr(time)],[erp3 + erp3v, fliplr(erp3 - erp3v)], co(4,:),...
             'edgecolor','none','facealpha',0.2  )
         
         grid on;  xlabel('time (s)'); ylim(yl); xlim(xl)
         title(sprintf('%s %s, N=%d',fieldnames{jj},stimname,...
             grandavg.(fieldnames{jj}).congruentC.dof(1)))
         if jj ==1
-            legend('Cong.Corr.','Incong.Corr.','diff','location','northwest')
+            legend('Cong.Corr.','Incong.Corr.','Incong.Comm.','diff','location','northwest')
         end
         
     end
     
-    figure(2); set(gcf,'name','Incong.Comm. - Incong.Corr.')
-    for jj = 1:length(fieldnames)
-        
-        subplot(2,4,(ii-1)*4 + jj)
-        hold all
-        erp1 = sum(grandavg.(fieldnames{jj}).incongruentC.avg .* coeff(:,n),1) ;
-        %     erp1 = erp1 - mean(erp1(timebl));
-        erp1v = sqrt(sum(((grandavg.(fieldnames{jj}).incongruentC.var ) .* abs(coeff(:,n))).^2,1)) ...
-            ./ sqrt(grandavg.(fieldnames{jj}).incongruentC.dof(1,:));
-        plot(time, erp1, 'color',co(1,:),'linewidth',2)
-        
-        erp2 = sum(grandavg.(fieldnames{jj}).commissionI.avg .* coeff(:,n),1) ;
-        %     erp2 = erp2 - mean(erp2(timebl));
-        erp2v = sqrt(sum(((grandavg.(fieldnames{jj}).commissionI.var ) .* abs(coeff(:,n))).^2,1)) ...
-            ./ sqrt(grandavg.(fieldnames{jj}).commissionI.dof(1,:));
-        plot(time, erp2, 'color',co(2,:),'linewidth',2)
-        
-        plot(time, erp2 - erp1, '--k')
-        
-        fill([time, fliplr(time)],[erp1 + erp1v, fliplr(erp1 - erp1v)], co(1,:),...
-            'edgecolor','none','facealpha',0.2  )
-        
-        fill([time, fliplr(time)],[erp2 + erp2v, fliplr(erp2 - erp2v)], co(2,:),...
-            'edgecolor','none','facealpha',0.2  )
-        grid on; xlabel('time (s)'); ylim(yl);   xlim(xl)
-        title(sprintf('%s %s, N=%d',fieldnames{jj},stimname,...
-            grandavg.(fieldnames{jj}).incongruentC.dof(1) ))
-        if jj ==1
-            legend('Incong.Corr.','Incong.Comm.','diff','location','northwest')
-        end
-        
-    end
+%     figure(2); set(gcf,'name','Incong.Comm. - Incong.Corr.')
+%     for jj = 1:length(fieldnames)
+%         
+%         subplot(2,4,(ii-1)*4 + jj)
+%         hold all
+%         erp1 = sum(grandavg.(fieldnames{jj}).incongruentC.avg .* coeff(:,n),1) ;
+%         %     erp1 = erp1 - mean(erp1(timebl));
+%         erp1v = sqrt(sum(((grandavg.(fieldnames{jj}).incongruentC.var ) .* abs(coeff(:,n))).^2,1)) ...
+%             ./ sqrt(grandavg.(fieldnames{jj}).incongruentC.dof(1,:));
+%         plot(time, erp1, 'color',co(1,:),'linewidth',2)
+%         
+%         erp2 = sum(grandavg.(fieldnames{jj}).commissionI.avg .* coeff(:,n),1) ;
+%         %     erp2 = erp2 - mean(erp2(timebl));
+%         erp2v = sqrt(sum(((grandavg.(fieldnames{jj}).commissionI.var ) .* abs(coeff(:,n))).^2,1)) ...
+%             ./ sqrt(grandavg.(fieldnames{jj}).commissionI.dof(1,:));
+%         plot(time, erp2, 'color',co(2,:),'linewidth',2)
+%         
+%         plot(time, erp2 - erp1, '--k')
+%         
+%         fill([time, fliplr(time)],[erp1 + erp1v, fliplr(erp1 - erp1v)], co(1,:),...
+%             'edgecolor','none','facealpha',0.2  )
+%         
+%         fill([time, fliplr(time)],[erp2 + erp2v, fliplr(erp2 - erp2v)], co(2,:),...
+%             'edgecolor','none','facealpha',0.2  )
+%         grid on; xlabel('time (s)'); ylim(yl);   xlim(xl)
+%         title(sprintf('%s %s, N=%d',fieldnames{jj},stimname,...
+%             grandavg.(fieldnames{jj}).incongruentC.dof(1) ))
+%         if jj ==1
+%             legend('Incong.Corr.','Incong.Comm.','diff','location','northwest')
+%         end
+%         
+%     end
+end
 end
 figure(1);
-saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/congruency_summaryfig_ages_pc%d.jpg',n))
+% saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/congruency_summaryfig_ages_pc%d.jpg',n))
 
 
 figure(2);
-saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/correct-commission_summaryfig_ages_pc%d.jpg',n))
+% saveas(gcf,sprintf('/data/liuzzil2/UMD_Flanker/results/correct-commission_summaryfig_ages_pc%d.jpg',n))
 %%
 figure(3); set(gcf,'color','w')
 pcacomp = grandavg.all.all;
@@ -252,7 +266,6 @@ else
     
     taskepoch = [-1 1];
 end
-
 
 cond = 'All';
 
@@ -447,8 +460,7 @@ for aa = 1:3
     hold on
     title('Datapoint distribution')
     grid on; xlim([-10 10])
-    
-    
+        
     if aa == 3
         legend('12 yo','15 yo','18 yo','location','best')
     end
