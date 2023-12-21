@@ -1,4 +1,4 @@
-clear % clear matlab workspace
+clearvars % clear matlab workspace
 clc % clear matlab command window
 %addpath(genpath('C:\Users\Berger\Documents\eeglab13_4_4b'));% enter the path of the EEGLAB folder in this line
 %addpath(genpath('C:\Users\Berger\Documents\eeglab13_4_4b'))
@@ -272,41 +272,43 @@ for downsampf = [30, 40] % leave empty if no downsampling
                         erptemp = erppca(:,:,erp.time>= tstart & erp.time <= tend);
                         [N,edges] =histcounts(erptemp(:),'Normalization','pdf');
                         edges = (edges(1:end-1) + edges(2:end))/2;
+                        %% begin comment
+                        erptemp = reshape(permute(erptemp,[1,3,2]), [ncomp,size(erptemp,2)*size(erptemp,3)]);  % norm2
                         
-%                         erptemp = reshape(permute(erptemp,[1,3,2]), [ncomp,size(erptemp,2)*size(erptemp,3)]);  % norm2
-                        
-%                         figure; set(gcf,'color','w'); plot(erptemp'); 
-%                         xlabel('data point'); ylabel('z-score'); 
-%                         legend('PC 1','PC 2','location','best')
-%                         figure; set(gcf,'color','w')
-%                         histogram(erptemp(1,:,:),'Normalization','pdf','DisplayStyle','bar')
-%                         hold on
-%                         histogram(erptemp(2,:,:),'Normalization','pdf','DisplayStyle','bar')
-%                         xlim([-8 8]);legend('PC 1','PC 2','location','best')
-%                         xlabel('z-score'); ylabel('probability distribution'); 
-%                         v = var(erppca,0,2);
-%                         figure; plot(erp.time, squeeze(v))
-                        %                     figure;
-                        %                     for cc = 1:ncomp
-                        %                         subplot(3,3,cc)
-                        %                         co = get(gca,'colororder');
-                        %                         x = squeeze(erppca(cc,:,:));
-                        %                         plot(erp.time, mean(x,1))
-                        %                         hold on
-                        %                         fill([erp.time, fliplr(erp.time)], ...
-                        %                             [mean(x,1)+std(x,0,1) , fliplr(mean(x,1)-std(x,0,1) )],...
-                        %                             co(1,:),'edgecolor','none','facealpha',0.2)
-                        %                     end
-                        
-                        %                     rtIcorrect = cell2mat(eventclean.rtim(condmat));
-                        %                     srt = sort(rtIcorrect);
-                        %                 figure; plot(srt)
-                        %                 ylabel('reaction time'); title('Correct Incongruent')
-                        %                     tend = srt(round(0.8 * length(srt)))/1000;
-                        
-                        
-                        %                 figure; set(gcf,'color','w','position',[  1129         325         360         888])
-                       
+                        figure; set(gcf,'color','w'); plot(erptemp'); 
+                        xlabel('data point'); ylabel('z-score'); 
+                        legend('PC 1','PC 2','location','best')
+                        saveas(gcf,'/data/liuzzil2/UMD_Flanker/results/analysis_description_1.fig')
+                        figure; set(gcf,'color','w')
+                        histogram(erptemp(1,:,:),'Normalization','pdf','DisplayStyle','bar')
+                        hold on
+                        histogram(erptemp(2,:,:),'Normalization','pdf','DisplayStyle','bar')
+                        xlim([-8 8]);legend('PC 1','PC 2','location','best')
+                        xlabel('z-score'); ylabel('probability distribution'); 
+                        saveas(gcf,'/data/liuzzil2/UMD_Flanker/results/analysis_description_2.fig')
+                        v = var(erppca,0,2);
+                        figure; plot(erp.time, squeeze(v))
+                        figure;
+                        for cc = 1:ncomp
+                            subplot(3,3,cc)
+                            co = get(gca,'colororder');
+                            x = squeeze(erppca(cc,:,:));
+                            plot(erp.time, mean(x,1))
+                            hold on
+                            fill([erp.time, fliplr(erp.time)], ...
+                                [mean(x,1)+std(x,0,1) , fliplr(mean(x,1)-std(x,0,1) )],...
+                                co(1,:),'edgecolor','none','facealpha',0.2)
+                        end
+
+                        rtIcorrect = cell2mat(eventclean.rtim(condmat));
+                        srt = sort(rtIcorrect);
+                        figure; plot(srt)
+                        ylabel('reaction time'); title('Correct Incongruent')
+                        tend = srt(round(0.8 * length(srt)))/1000;
+
+
+                        figure; set(gcf,'color','w','position',[  1129         325         360         888])
+                       %% end comment
                        datapc =  mean(erppca(:,Ccorrect,:),2); % congrunet correct
                        xcc = erppca(:,Ccorrect,:) - datapc;
                       
@@ -338,60 +340,57 @@ for downsampf = [30, 40] % leave empty if no downsampling
                             condname = 'All';
                             datapc =  mean(erppca,2);
                             x = cat(2, xcc, xic, xco);
+                        end                     
+                        %% begin comment
+                        figure; set(gcf,'color','w')
+                        plot(erp.time, squeeze(mean(x,2)), 'linewidth',2)
+                        xlabel('time(s)'); 
+                        title('Mean residual $\bar{x}$','interpreter','latex','Fontsize',11)
+                        xlim([tstart, tend]); ylim([-0.001, 0.001])
+                        saveas(gcf,'/data/liuzzil2/UMD_Flanker/results/analysis_description_3.fig')
+%                         Example trial, jj 6, age 18
+                        figure; set(gcf,'color','w'); subplot(311)
+                        plot(erp.time,squeeze(datapc)','linewidth',2)
+                        xlabel('time (s)'); ylabel('\muV'); grid on
+                        xlim([tstart, tend]); ylim([-2, 2])
+                        legend('PC 1','PC 2','location','best'); 
+                        title('Average ERP $\bar{s}$','interpreter','latex','Fontsize',11,'fontweight','bold')
+                        subplot(312)
+                        plot(erp.time,squeeze(erppca(1,1,:))','linewidth',2)
+                        hold on
+                        plot(erp.time,squeeze(erppca(2,1,:))','linewidth',2)
+                        title('Single trial ERP $s_i$','interpreter','latex','Fontsize',11,'fontweight','bold')
+                        xlabel('time (s)'); ylabel('\muV'); grid on
+                        xlim([tstart, tend]); ylim([-2, 2])
+                        subplot(313)
+                        plot(erp.time,squeeze(x(1,1,:))','linewidth',2)
+                        hold on
+                        plot(erp.time,squeeze(x(2,1,:))','linewidth',2)
+                        title('Single trial residual $x_i = s_i - \bar{s}$','interpreter','latex','Fontsize',11,'fontweight','bold')
+                        xlabel('time (s)'); ylabel('\muV'); grid on
+                        xlim([tstart, tend]); ylim([-2, 2])
+                        saveas(gcf,'/data/liuzzil2/UMD_Flanker/results/analysis_description_4.fig')
+                        
+                        figure; set(gcf,'color','w')
+                        for ii = 1:20
+                            plot(erp.time,squeeze(x(:,ii,:))' + (ii-1)*4,'k')
+                            hold on; xlim([tstart, tend]); 
                         end
-
-                      
-                     
-                        
-%                         figure; set(gcf,'color','w')
-%                         plot(erp.time, squeeze(mean(x,2)), 'linewidth',2)
-%                         xlabel('time(s)'); 
-%                         title('Mean residual $\bar{x}$','interpreter','latex','Fontsize',11)
-%                         xlim([tstart, tend]); ylim([-0.001, 0.001])
-                        
-                        % Example trial, jj 6, age 18
-%                         figure; set(gcf,'color','w'); subplot(311)
-%                         plot(erp.time,squeeze(datapc)','linewidth',2)
-%                         xlabel('time (s)'); ylabel('\muV'); grid on
-%                         xlim([tstart, tend]); ylim([-2, 2])
-%                         legend('PC 1','PC 2','location','best'); 
-%                         title('Average ERP $\bar{s}$','interpreter','latex','Fontsize',11,'fontweight','bold')
-%                         subplot(312)
-%                         plot(erp.time,squeeze(erppca(1,1,:))','linewidth',2)
-%                         hold on
-%                         plot(erp.time,squeeze(erppca(2,1,:))','linewidth',2)
-%                         title('Single trial ERP $s_i$','interpreter','latex','Fontsize',11,'fontweight','bold')
-%                        
-%                         xlabel('time (s)'); ylabel('\muV'); grid on
-%                         xlim([tstart, tend]); ylim([-2, 2])
-%                         subplot(313)
-%                         plot(erp.time,squeeze(x(1,1,:))','linewidth',2)
-%                         hold on
-%                         plot(erp.time,squeeze(x(2,1,:))','linewidth',2)
-%                         title('Single trial residual $x_i = s_i - \bar{s}$','interpreter','latex','Fontsize',11,'fontweight','bold')
-%                         xlabel('time (s)'); ylabel('\muV'); grid on
-%                         xlim([tstart, tend]); ylim([-2, 2])
-%                         
-%                         figure; set(gcf,'color','w')
-%                     for ii = 1:20
-%                         plot(erp.time,squeeze(x(:,ii,:))' + (ii-1)*4,'k')
-%                         hold on; xlim([tstart, tend]); 
-%                     end
-%                     ylim([-3 80]); set(gca,'yTick',[])
-%                         xlabel('time (s)');
-        end
-
-                        % Fourier spectrum of residuals
-%                         nffts = 2.^(7:11) ;
-%                         nfft = nffts( nffts < size(x,3)/2);
-%                         if isempty(nfft)
-%                             nfft = 128;
-%                         end
-%                         pp = zeros(ncomp,nfft(end)+1,size(x,2));
-%                         for cc = 1:ncomp
-%                             [pp(cc,:,:),ff] = pwelch(squeeze(x(cc,:,:))',[],[],[],downsampf);
-%                         end
-                        
+                        ylim([-3 80]); set(gca,'yTick',[])
+                        xlabel('time (s)');
+        
+%                         Fourier spectrum of residuals
+                        nffts = 2.^(7:11) ;
+                        nfft = nffts( nffts < size(x,3)/2);
+                        if isempty(nfft)
+                            nfft = 128;
+                        end
+                        pp = zeros(ncomp,nfft(end)+1,size(x,2));
+                        for cc = 1:ncomp
+                            [pp(cc,:,:),ff] = pwelch(squeeze(x(cc,:,:))',[],[],[],downsampf);
+                        end
+                        saveas(gcf,'/data/liuzzil2/UMD_Flanker/results/analysis_description_5.fig')
+                        %% end comment
                         
                         A = zeros(ncomp,ncomp,length(tb));
                         pvalue = zeros(ncomp,length(tb));
