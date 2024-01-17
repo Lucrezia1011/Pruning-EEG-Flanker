@@ -1,4 +1,5 @@
 # Pruning-EEG-Flanker
+*** CODE CLEANING IN PROGRESS ***
 
 Analysis code from "Changes in Behavior and Neural Dynamics across Adolescent Development" DOI: https://doi.org/10.1523/JNEUROSCI.0462-23.2023 by Lucrezia Liuzzi, Daniel S. Pine,  Nathan A. Fox and Bruno B. Averbeck. 
 
