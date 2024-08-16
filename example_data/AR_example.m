@@ -7,14 +7,14 @@ datapath = '/data/liuzzil2/UMD_Flanker/datatogit/';
 % load PCA components
 load([datapath,'PCA_coeffs.mat'])
 
-tstart = -0.4;% trial start time for the autoregressor
-tend = 0.6; % trial end time for the autoregressor
+tstart = -0.5;% trial start time for the autoregressor
+tend = 0.5; % trial end time for the autoregressor
 
 
 normalizeopt = 2; % normalized overall variance of residuals
 ncomp = 2; % number of ICA components to keep
 
-subject = 5;% subject to load
+subject = 1;% subject to load
 tbse = [tstart, tend]; % 0 mean in the same window of analysis
 
 
